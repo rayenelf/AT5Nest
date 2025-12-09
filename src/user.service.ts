@@ -6,33 +6,33 @@ import { User, UserRole } from './user.entity';
 
 @Injectable()
 export class UserService {
-    // Créer un utilisateur avec vérification de doublon (email unique)
-    async createUser(userDto: Partial<User>): Promise<User> {
-      // On suppose que le contrôleur a déjà vérifié l'unicité de l'email
-      const user = this.userRepository.create(userDto);
-      return this.userRepository.save(user);
-    }
+  // Créer un utilisateur avec vérification de doublon (email unique)
+  async createUser(userDto: Partial<User>): Promise<User> {
+    // On suppose que le contrôleur a déjà vérifié l'unicité de l'email
+    const user = this.userRepository.create(userDto);
+    return this.userRepository.save(user);
+  }
 
-    // Trouver un utilisateur par id
-    async findById(id: string): Promise<User | null> {
-      // MongoDB: id est un ObjectId
-      const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-      return this.userRepository.findOne({ where: { id: objectId } });
-    }
+  // Trouver un utilisateur par id
+  async findById(id: string): Promise<User | null> {
+    // MongoDB: id est un ObjectId
+    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    return this.userRepository.findOne({ where: { id: objectId } });
+  }
 
-    // Mettre à jour un utilisateur
-    async updateUser(id: string, updateDto: Partial<User>): Promise<User | null> {
-      const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-      await this.userRepository.update({ id: objectId }, updateDto);
-      return this.findById(id);
-    }
+  // Mettre à jour un utilisateur
+  async updateUser(id: string, updateDto: Partial<User>): Promise<User | null> {
+    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    await this.userRepository.update({ id: objectId }, updateDto);
+    return this.findById(id);
+  }
 
-    // Supprimer un utilisateur
-    async deleteUser(id: string): Promise<boolean> {
-      const objectId = typeof id === 'string' ? new ObjectId(id) : id;
-      const res = await this.userRepository.delete({ id: objectId });
-      return !!res.affected && res.affected > 0;
-    }
+  // Supprimer un utilisateur
+  async deleteUser(id: string): Promise<boolean> {
+    const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    const res = await this.userRepository.delete({ id: objectId });
+    return !!res.affected && res.affected > 0;
+  }
   constructor(
     @InjectRepository(User)
     private readonly userRepository: MongoRepository<User>,

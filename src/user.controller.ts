@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 
@@ -9,8 +20,10 @@ export class UserController {
   @Post()
   async create(@Body() userDto: Partial<User>) {
     // Vérification doublon email
-    const existing = await this.userService.findByEmailDomain(userDto.email?.split('@')[1] || '');
-    if (existing.some(u => u.email === userDto.email)) {
+    const existing = await this.userService.findByEmailDomain(
+      userDto.email?.split('@')[1] || '',
+    );
+    if (existing.some((u) => u.email === userDto.email)) {
       throw new HttpException('Email already exists', HttpStatus.CONFLICT);
     }
     return this.userService.createUser(userDto);
