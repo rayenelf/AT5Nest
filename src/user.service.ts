@@ -23,8 +23,27 @@ export class UserService {
   // Mettre à jour un utilisateur
   async updateUser(id: string, updateDto: Partial<User>): Promise<User | null> {
     const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+    const before = await this.userRepository.findOne({
+      where: { id: objectId },
+    });
     await this.userRepository.update({ id: objectId }, updateDto);
-    return this.findById(id);
+    const after = await this.userRepository.findOne({
+      where: { id: objectId },
+    });
+
+    // Journalisation simple des modifications
+    if (before && after) {
+      const changed: Record<string, { from: unknown; to: unknown }> = {};
+      for (const key of Object.keys(updateDto)) {
+        const prev = (before as unknown as Record<string, unknown>)[key];
+        const next = (after as unknown as Record<string, unknown>)[key];
+        if (prev !== next) changed[key] = { from: prev, to: next };
+      }
+      if (Object.keys(changed).length > 0) {
+        console.log('User updated changes:', { id, changed });
+      }
+    }
+    return after;
   }
 
   // Supprimer un utilisateur
@@ -32,6 +51,33 @@ export class UserService {
     const objectId = typeof id === 'string' ? new ObjectId(id) : id;
     const res = await this.userRepository.delete({ id: objectId });
     return !!res.affected && res.affected > 0;
+  }
+
+  // Désactiver les comptes inactifs depuis plus d'un an (basé sur updatedAt)
+  async deactivateInactiveSinceOneYear(): Promise<number> {
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const result = await this.userRepository.updateMany(
+      { updatedAt: { $lt: oneYearAgo } },
+      { $set: { isActive: false } },
+    );
+    return (
+      (result as unknown as { modifiedCount?: number })?.modifiedCount || 0
+    );
+  }
+
+  // Mettre à jour en masse le rôle des utilisateurs d'un domaine email
+  async bulkUpdateRoleByEmailDomain(
+    domain: string,
+    role: UserRole,
+  ): Promise<number> {
+    const result = await this.userRepository.updateMany(
+      { email: { $regex: new RegExp(`@${domain}$`, 'i') } },
+      { $set: { role } },
+    );
+    return (
+      (result as unknown as { modifiedCount?: number })?.modifiedCount || 0
+    );
   }
   constructor(
     @InjectRepository(User)
@@ -58,12 +104,8 @@ export class UserService {
     if (role === UserRole.ADMIN) {
       return users;
     }
-    // Pour client, exclure email et role
-    return users.map(({ id, createdAt, updatedAt }) => ({
-      id,
-      createdAt,
-      updatedAt,
-    }));
+    // Pour client, inclure seulement id et email
+    return users.map(({ id, email }) => ({ id, email }));
   }
 
   // 2. Utilisateurs non mis à jour depuis 6 mois

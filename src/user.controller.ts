@@ -9,10 +9,13 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
+import { UserFieldsInterceptor } from './interceptors/user-fields.interceptor';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 
+@UseInterceptors(UserFieldsInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

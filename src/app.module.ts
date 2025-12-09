@@ -6,6 +6,8 @@ import { AppService } from './app.service';
 import { AdminUserController } from './admin-user.controller';
 import { ClientUserController } from './client-user.controller';
 import { UserController } from './user.controller';
+import { UserService } from './user.service';
+import { User } from './user.entity';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { UserController } from './user.controller';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    TypeOrmModule.forFeature([User]),
   ],
   controllers: [
     AppController,
@@ -22,6 +25,6 @@ import { UserController } from './user.controller';
     ClientUserController,
     UserController,
   ],
-  providers: [AppService],
+  providers: [AppService, UserService],
 })
 export class AppModule {}
